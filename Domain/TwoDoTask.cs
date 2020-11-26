@@ -1,16 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
+
 
 namespace TwoDo.Domain
 {
     class TwoDoTask
     {
-        public int Id { get; internal set; }
+        public int Id { get; protected set; }
 
-        public string TaskName { get; internal set; }
+        public string TaskName { get; protected set; }
 
-        public DateTime DueDate { get; internal set; }
+        public DateTime DueDate { get; protected set; }
 
         public TwoDoTask(string taskName, DateTime dueDate)
         {

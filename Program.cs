@@ -3,15 +3,15 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Threading;
+using TwoDo.Data;
 using TwoDo.Domain;
+using Microsoft.EntityFrameworkCore;
 
 namespace TwoDo
 {
     class Program
     {
-
-        static string connectionString = "Server=.;Database=TwoDo;Trusted_Connection=True";
-
+        static TwoDoContext context = new TwoDoContext();
 
         static void Main(string[] args)
         {
@@ -66,54 +66,38 @@ namespace TwoDo
         {
             Console.WriteLine($"{"TaskId",-10}{"Task Two Do",-20}{"Due date",-20}");
 
+            Console.WriteLine("--------------------------------------------------------------");
+
             if (taskList != null)
             {
                 foreach (var task in taskList)
                 {
                     Console.WriteLine($"{task.Id,-10}{task.TaskName,-20}{task.DueDate,-20}");
                 }
+
+                Console.WriteLine();
+
+                Console.WriteLine("Press any key to return to Main menu");
+
             }
             else
             {
+                Console.Clear();
+
                 Console.WriteLine("Nothing has been added yet or there is a problem!");
+
+                Console.WriteLine("Press any key to continue");
             }
 
-            Console.ReadKey();
+            Console.ReadKey(true);
 
         }
 
         private static List<TwoDoTask> ListTwoDo()
         {
-            var sqlCode = @"
-                            SELECT *
-                            FROM TwoDo
-                            ";
+            List<TwoDoTask> twoDoTasks = new List<TwoDoTask>(context.TwoDoTask);
 
-
-
-            List<TwoDoTask> twoDoTaskList = new List<TwoDoTask>();
-
-            using SqlConnection connection = new SqlConnection(connectionString);
-            using SqlCommand command = new SqlCommand(sqlCode, connection);
-
-            connection.Open();
-
-            SqlDataReader reader = command.ExecuteReader();
-
-                while (reader.Read())
-                {
-                    
-                    TwoDoTask twoDoTask = new TwoDoTask((int)reader["Id"], (string)reader["TaskName"], (DateTime)reader["DueDate"]);
-
-                    twoDoTaskList.Add(twoDoTask);
-
-                    twoDoTask = null;
-                }
-
-            connection.Close();
-
-            return twoDoTaskList;
-
+            return twoDoTasks;
         }
 
         private static void AddTwoDo()
@@ -150,28 +134,13 @@ namespace TwoDo
 
         private static bool AddTwoDoTaskToDatabase(TwoDoTask twoDoTask)
         {
+            context.TwoDoTask.Add(twoDoTask);
+
             int greatSuccess = 0;
 
-            var sqlCode = @"
-                            INSERT INTO TwoDo
-                            (TaskName, DueDate) 
-                            VALUES (@taskName, @dueDate)
-                            ";
+            greatSuccess = context.SaveChanges();
 
-            using SqlConnection connection = new SqlConnection(connectionString);
-            using SqlCommand command = new SqlCommand(sqlCode, connection);
-
-            command.Parameters.AddWithValue("taskName", twoDoTask.TaskName);
-
-            command.Parameters.AddWithValue("dueDate", twoDoTask.DueDate);
-
-            connection.Open();
-
-            greatSuccess = command.ExecuteNonQuery();
-
-            connection.Close();
-
-            if (greatSuccess == 0)
+            if (greatSuccess == 1)
             {
                 return true;
             }
@@ -180,7 +149,6 @@ namespace TwoDo
             {
                 return false;
             }
-
 
         }
     }
